@@ -1,7 +1,7 @@
 import "./style.css";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/students";
+const API_URL = "https://student-management-backend-z9x5.onrender.com/api/students";
 
 document.querySelector("#app").innerHTML = `
 
