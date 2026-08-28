@@ -1,7 +1,54 @@
 import "./style.css";
 import axios from "axios";
+import { Login } from "./views/Login.jsx";
+import { Signup } from "./views/Signup.jsx";
 
-const API_URL = "https://student-management-backend-z9x5.onrender.com/api/students";
+const API_URL =
+  "https://student-management-backend-z9x5.onrender.com/api/students";
+
+/* ========================================
+   AUTHENTICATION
+======================================== */
+
+function showLogin() {
+  const app = document.querySelector("#app");
+
+  app.innerHTML = Login({
+    onSignup: showSignup,
+    onSuccess: showDashboard,
+  });
+}
+
+function showSignup() {
+  const app = document.querySelector("#app");
+
+  app.innerHTML = Signup({
+    onLogin: showLogin,
+    onSuccess: showDashboard,
+  });
+}
+
+function showDashboard() {
+  window.location.reload();
+}
+
+/* ========================================
+   CHECK LOGIN
+======================================== */
+
+const loggedInUser = localStorage.getItem("campusUser");
+
+if (!loggedInUser) {
+  showLogin();
+} else {
+  showDashboardPage();
+}
+
+/* ========================================
+   DASHBOARD
+======================================== */
+
+function showDashboardPage() {
 
 document.querySelector("#app").innerHTML = `
 
@@ -10,17 +57,30 @@ document.querySelector("#app").innerHTML = `
   <header class="navbar">
 
     <div class="logo-area">
-      <div class="logo-icon">S</div>
+
+      <div class="logo-icon">
+        S
+      </div>
 
       <h2>
         Student<span>Hub</span>
       </h2>
+
     </div>
 
     <div class="nav-right">
+
       <div class="nav-badge">
         Student Management
       </div>
+
+      <button
+        id="logoutButton"
+        class="logout-btn"
+      >
+        Logout
+      </button>
+
     </div>
 
   </header>
@@ -31,11 +91,15 @@ document.querySelector("#app").innerHTML = `
     <div class="page-header">
 
       <div>
-        <h1>Student Management</h1>
+
+        <h1>
+          Student Management
+        </h1>
 
         <p>
           Manage and monitor all students in one place.
         </p>
+
       </div>
 
       <button
@@ -53,23 +117,54 @@ document.querySelector("#app").innerHTML = `
     <section class="stats">
 
       <div class="stat-card">
-        <p>Total Students</p>
-        <h3 id="totalStudents">0</h3>
+
+        <p>
+          Total Students
+        </p>
+
+        <h3 id="totalStudents">
+          0
+        </h3>
+
       </div>
 
-      <div class="stat-card">
-        <p>Male Students</p>
-        <h3 id="maleStudents">0</h3>
-      </div>
 
       <div class="stat-card">
-        <p>Female Students</p>
-        <h3 id="femaleStudents">0</h3>
+
+        <p>
+          Male Students
+        </p>
+
+        <h3 id="maleStudents">
+          0
+        </h3>
+
       </div>
 
+
       <div class="stat-card">
-        <p>Courses</p>
-        <h3 id="totalCourses">0</h3>
+
+        <p>
+          Female Students
+        </p>
+
+        <h3 id="femaleStudents">
+          0
+        </h3>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <p>
+          Courses
+        </p>
+
+        <h3 id="totalCourses">
+          0
+        </h3>
+
       </div>
 
     </section>
@@ -492,6 +587,25 @@ document.querySelector("#app").innerHTML = `
 `;
 
 
+/* ========================================
+   LOGOUT
+======================================== */
+
+document
+  .querySelector("#logoutButton")
+  ?.addEventListener("click", () => {
+
+    localStorage.removeItem("campusUser");
+
+    window.location.reload();
+
+  });
+
+
+/* ========================================
+   STUDENTS
+======================================== */
+
 let students = [];
 let editingId = null;
 
@@ -544,24 +658,26 @@ function renderStudents(data) {
       "#emptyState"
     );
 
-  tbody.innerHTML = "";
+  if (!tbody) return;
 
+  tbody.innerHTML = "";
 
   if (
     !data ||
     data.length === 0
   ) {
 
-    emptyState.style.display =
-      "block";
+    if (emptyState) {
+      emptyState.style.display = "block";
+    }
 
     return;
 
   }
 
-
-  emptyState.style.display =
-    "none";
+  if (emptyState) {
+    emptyState.style.display = "none";
+  }
 
 
   data.forEach(student => {
@@ -647,20 +763,17 @@ function updateStats() {
   const total =
     students.length;
 
-
   const male =
     students.filter(
       student =>
         student.gender === "Male"
     ).length;
 
-
   const female =
     students.filter(
       student =>
         student.gender === "Female"
     ).length;
-
 
   const courses =
     new Set(
@@ -673,28 +786,39 @@ function updateStats() {
     );
 
 
-  document.querySelector(
-    "#totalStudents"
-  ).textContent =
-    total;
+  const totalElement =
+    document.querySelector(
+      "#totalStudents"
+    );
+
+  const maleElement =
+    document.querySelector(
+      "#maleStudents"
+    );
+
+  const femaleElement =
+    document.querySelector(
+      "#femaleStudents"
+    );
+
+  const coursesElement =
+    document.querySelector(
+      "#totalCourses"
+    );
 
 
-  document.querySelector(
-    "#maleStudents"
-  ).textContent =
-    male;
+  if (totalElement)
+    totalElement.textContent = total;
 
+  if (maleElement)
+    maleElement.textContent = male;
 
-  document.querySelector(
-    "#femaleStudents"
-  ).textContent =
-    female;
+  if (femaleElement)
+    femaleElement.textContent = female;
 
-
-  document.querySelector(
-    "#totalCourses"
-  ).textContent =
-    courses.size;
+  if (coursesElement)
+    coursesElement.textContent =
+      courses.size;
 
 
   updateAnalytics();
@@ -711,20 +835,17 @@ function updateAnalytics() {
   const total =
     students.length;
 
-
   const male =
     students.filter(
       student =>
         student.gender === "Male"
     ).length;
 
-
   const female =
     students.filter(
       student =>
         student.gender === "Female"
     ).length;
-
 
   const other =
     students.filter(
@@ -733,35 +854,44 @@ function updateAnalytics() {
     ).length;
 
 
-  document.querySelector(
-    "#chartTotal"
-  ).textContent =
-    total;
+  const chartTotal =
+    document.querySelector(
+      "#chartTotal"
+    );
+
+  const chartMale =
+    document.querySelector(
+      "#chartMale"
+    );
+
+  const chartFemale =
+    document.querySelector(
+      "#chartFemale"
+    );
+
+  const chartOther =
+    document.querySelector(
+      "#chartOther"
+    );
 
 
-  document.querySelector(
-    "#chartMale"
-  ).textContent =
-    male;
+  if (chartTotal)
+    chartTotal.textContent = total;
 
+  if (chartMale)
+    chartMale.textContent = male;
 
-  document.querySelector(
-    "#chartFemale"
-  ).textContent =
-    female;
+  if (chartFemale)
+    chartFemale.textContent = female;
 
-
-  document.querySelector(
-    "#chartOther"
-  ).textContent =
-    other;
+  if (chartOther)
+    chartOther.textContent = other;
 
 
   const malePercent =
     total
       ? male / total * 100
       : 0;
-
 
   const femalePercent =
     total
@@ -802,7 +932,6 @@ function updateAnalytics() {
 
     const course =
       student.course || "Unknown";
-
 
     courseCounts[course] =
       (courseCounts[course] || 0) + 1;
@@ -880,7 +1009,7 @@ function updateAnalytics() {
 
 document
   .querySelector("#showForm")
-  .addEventListener(
+  ?.addEventListener(
     "click",
     () => {
 
@@ -888,8 +1017,7 @@ document
 
       document.querySelector(
         "#formCard"
-      ).style.display =
-        "block";
+      ).style.display = "block";
 
       window.scrollTo({
         top: 0,
@@ -906,7 +1034,7 @@ document
 
 document
   .querySelector("#cancelForm")
-  .addEventListener(
+  ?.addEventListener(
     "click",
     () => {
 
@@ -914,8 +1042,7 @@ document
 
       document.querySelector(
         "#formCard"
-      ).style.display =
-        "none";
+      ).style.display = "none";
 
     }
   );
@@ -927,7 +1054,7 @@ document
 
 document
   .querySelector("#student-form")
-  .addEventListener(
+  ?.addEventListener(
     "submit",
     async event => {
 
@@ -1011,12 +1138,10 @@ document
 
         document.querySelector(
           "#formCard"
-        ).style.display =
-          "none";
+        ).style.display = "none";
 
 
         await loadStudents();
-
 
       } catch (error) {
 
@@ -1045,7 +1170,6 @@ window.editStudent =
         item =>
           item._id === id
       );
-
 
     if (!student) return;
 
@@ -1140,7 +1264,6 @@ window.deleteStudent =
           item._id === id
       );
 
-
     if (!student) return;
 
 
@@ -1167,7 +1290,6 @@ window.deleteStudent =
 
       await loadStudents();
 
-
     } catch (error) {
 
       console.error(error);
@@ -1188,7 +1310,7 @@ window.deleteStudent =
 
 document
   .querySelector("#searchInput")
-  .addEventListener(
+  ?.addEventListener(
     "input",
     event => {
 
@@ -1268,24 +1390,37 @@ document
 
 function resetForm() {
 
-  document
-    .querySelector("#student-form")
-    .reset();
+  const form =
+    document.querySelector(
+      "#student-form"
+    );
+
+  if (form) {
+    form.reset();
+  }
 
 
   editingId = null;
 
 
-  document.querySelector(
-    "#formTitle"
-  ).textContent =
-    "Add New Student";
+  const title =
+    document.querySelector(
+      "#formTitle"
+    );
+
+  const button =
+    document.querySelector(
+      "#submitBtn"
+    );
 
 
-  document.querySelector(
-    "#submitBtn"
-  ).textContent =
-    "Add Student";
+  if (title)
+    title.textContent =
+      "Add New Student";
+
+  if (button)
+    button.textContent =
+      "Add Student";
 
 }
 
@@ -1295,3 +1430,5 @@ function resetForm() {
 ======================================== */
 
 loadStudents();
+
+}
